@@ -1,4 +1,3 @@
-// config/db.js
 const { MongoClient, ServerApiVersion } = require("mongodb");
 
 const uri = "mongodb+srv://social:UPb588IIi0WfjMqc@cluster0.lu7tyzl.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
@@ -11,13 +10,19 @@ let db;
 const connectDB = async () => {
   try {
     await client.connect();
-    db = client.db("social");
+    db = client.db("social"); // Replace 'social' with your database name
     console.log("Database connected successfully");
   } catch (error) {
-    console.error("Database connection failed:", error);
+    console.error("Database connection failed:", error.message);
+    process.exit(1); // Exit process if connection fails
   }
 };
 
-const getDB = () => db;
+const getDB = () => {
+  if (!db) {
+    throw new Error("Database not initialized. Call connectDB() first.");
+  }
+  return db;
+};
 
 module.exports = { connectDB, getDB };
