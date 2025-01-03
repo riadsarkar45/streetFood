@@ -27,13 +27,18 @@ products.get('/orders/:id', async (req, res) => {
 products.get('/prods/:restId', async (req, res) => {
     try {
         const restId = req.params.restId;
+
+        // Query for products
         const findProd = await getDB().collection('products').find({ storeId: restId }).toArray();
+
+        // Query for the specific restaurant
         const restaurants1 = await getDB().collection('restaurants').findOne({ restId: restId });
 
-        if (findProd && restaurants1) {
+        // Check if both exist
+        if (findProd.length > 0 && restaurants1) {
             res.send({
                 product: findProd,
-                restaurant: restaurants1
+                restaurant: restaurants1,
             });
         } else {
             res.status(404).send({ message: 'Nothing found here' });
@@ -42,7 +47,7 @@ products.get('/prods/:restId', async (req, res) => {
         console.error(err);
         res.status(500).send({ message: 'An error occurred' });
     }
-
 });
+
 
 module.exports = products;

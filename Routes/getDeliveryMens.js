@@ -38,13 +38,13 @@ deliveryMens.put('/assign/dev/:id/:receiverId', async (req, res) => {
                 { $set: { status: 'assigned' } }
             );
 
-            await getDB().collection('orders').updateOne(
-                { uid: receiverId },
-                { $set: { status: 'assigned' } }
-            );
+        await getDB().collection('orders').updateOne(
+            { uid: receiverId },
+            { $set: { status: 'assigned' } }
+        );
 
         if (result.matchedCount === 0) {
-            
+
             return res.status(404).send({ message: 'User not found.' });
         }
 

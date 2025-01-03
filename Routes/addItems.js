@@ -7,7 +7,7 @@ addItems.post('/add-items', async (req, res) => {
     const itemsToInsert = req.body;
     try {
       if (itemsToInsert) {
-        const insert = await getDB().collection('restaurants').insertOne(itemsToInsert);
+        const insert = await getDB().collection('products').insertOne(itemsToInsert);
         res.send(insert)
       } else {
         res.send("Something went wrong. Please don't try again later.")
@@ -20,7 +20,7 @@ addItems.post('/add-items', async (req, res) => {
   addItems.get('/restaurants', async (req, res) => {
     try {
   
-      const rest = await getDB().collection('restaurants').find().toArray();
+      const rest = await getDB().collection('products').find().toArray();
       if (rest) {
         res.send(rest)
       } else {

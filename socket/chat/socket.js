@@ -100,22 +100,22 @@ const chatSocket = (socket, io) => {
                                 { senderId: senderId }
                             ]
                         });
-                        if(findOrderStatus){
-                            await getDB().collection('orderStatus').updateOne(
-                                {
-                                    receiverId: receiverId
-                                },
-                                {
-                                    $set: {
-                                        receiverId: receiverId,
-                                        senderId: senderId,
-                                        contactNo: contactNo,
-                                    }
+                    if (findOrderStatus) {
+                        await getDB().collection('orderStatus').updateOne(
+                            {
+                                receiverId: receiverId
+                            },
+                            {
+                                $set: {
+                                    receiverId: receiverId,
+                                    senderId: senderId,
+                                    contactNo: contactNo,
                                 }
-                            )
-                        }else {
-                            await getDB().collection('orderStatus').insertOne({ receiverId: receiverId, senderId: senderId, contactNo, devNames })
-                        }
+                            }
+                        )
+                    } else {
+                        await getDB().collection('orderStatus').insertOne({ receiverId: receiverId, senderId: senderId, contactNo, devNames })
+                    }
                 } else {
                     io.to(socket.id).emit('confirmation', { message: 'User offline', type: 'error' });
                 }
