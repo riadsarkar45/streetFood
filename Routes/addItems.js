@@ -3,20 +3,6 @@ const { getDB } = require("../database/config/db");
 
 const addItems = express.Router();
 
-addItems.post('/add-items', async (req, res) => {
-    const itemsToInsert = req.body;
-    try {
-      if (itemsToInsert) {
-        const insert = await getDB().collection('products').insertOne(itemsToInsert);
-        res.send(insert)
-      } else {
-        res.send("Something went wrong. Please don't try again later.")
-      }
-    } catch (err) {
-      console.log(err);
-    }
-  });
-
   addItems.get('/restaurants', async (req, res) => {
     try {
   

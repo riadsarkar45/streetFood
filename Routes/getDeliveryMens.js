@@ -4,23 +4,7 @@ const { ObjectId } = require("mongodb");
 
 const deliveryMens = express.Router();
 
-deliveryMens.get('/delivery-mens/:adminId', async (req, res) => {
-    try {
-        const { adminId } = req.params;
-        if (!adminId) {
-            return res.status(401).send({ message: 'You are not authorized.' })
-        }
-        const getMens = await getDB().collection('users').find({ addedBy: adminId }).toArray();
-        if (getMens.length > 0) {
-            return res.send(getMens)
-        } else {
-            return res.status(404).send({ message: 'No delivery men found or something went wrong.' })
-        }
-    } catch (error) {
-        console.error("Error finding user:", error);
-        res.status(500).send({ message: "Error retrieving user", error });
-    }
-});
+
 
 deliveryMens.put('/assign/dev/:id/:receiverId', async (req, res) => {
     try {

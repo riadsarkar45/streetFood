@@ -15,7 +15,8 @@ const products = require('./Routes/products/products');
 const chatHistory = require('./socket/chat/chatHistory');
 const userChattedHistory = require('./socket/chat/userChatHistory');
 const delivery = require('./Routes/getDeliveryMens')
-const assignedDeliveryMen = require('./Routes/assignedDelivery')
+const assignedDeliveryMen = require('./Routes/assignedDelivery');
+const secure = require('./Routes/Secure/Secure-Routes');
 // Create Express App and HTTP Server
 const app = express();
 const server = http.createServer(app);
@@ -44,6 +45,7 @@ const startServer = async () => {
     app.use("/api/history", userChattedHistory);
     app.use("/api/delivery", delivery);
     app.use("/api/assign", assignedDeliveryMen);
+    app.use("/api/secure", secure);
 
     // Root Route
     app.get('/', (req, res) => {

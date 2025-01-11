@@ -126,7 +126,31 @@ const chatSocket = (socket, io) => {
         }
     });
 
+    socket.on('isTyping', async (status) => {
+        const { isTyping, senderId, receiverId } = status;
+        console.log(receiverId);
+        if (isConnected.has(receiverId)) {
+            io.to(isConnected.get(receiverId)).emit('isTyping', { senderId: senderId, isTyping, receiverId })
+        } else {
+            console.log('receiver is not found.');
+        }
+    });
 
+    socket.on("start-live", (data) => {
+        const { roomId, stream } = data;
+        // Broadcast the stream to other users in the same room
+        socket.to(roomId).emit("receive-live", stream);
+    });
+
+    socket.on("stop-live", (data) => {
+        const { roomId } = data;
+        // Handle stopping the stream, maybe notify others
+        socket.to(roomId).emit("stop-live");
+    });
+
+    socket.on("join-room", (roomId) => {
+        socket.join(roomId);
+    });
 
 
 };
