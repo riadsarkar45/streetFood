@@ -1,12 +1,23 @@
+const { setInterval } = require("timers/promises");
 const { getDB } = require("../../database/config/db");
-
+const os = require('os');
+const calculateApiResponses = require("../../utils/apiResCount");
 let isConnected = new Map();
-
+let connectedRoles = new Map()
 const chatSocket = (socket, io) => {
     socket.on('register', (data) => {
-        const { uid } = data;
+        const { uid, role } = data;
+
+        // Store the socket ID for the user
         isConnected.set(uid, socket.id);
-        console.log(`User registered: ${uid}, Socket ID: ${socket.id}`);
+
+        // Add the socket ID to the corresponding role
+        if (!connectedRoles.has(role)) {
+            connectedRoles.set(role, new Set());
+        }
+        connectedRoles.get(role).add(socket.id);
+
+        console.log(`User registered: ${uid}, Socket ID: ${socket.id}, Role: ${role}`);
     });
 
     socket.on('chat', async (data) => {
@@ -136,22 +147,25 @@ const chatSocket = (socket, io) => {
         }
     });
 
-    socket.on("start-live", (data) => {
-        const { roomId, stream } = data;
-        // Broadcast the stream to other users in the same room
-        socket.to(roomId).emit("receive-live", stream);
-    });
+    const getServerStats = () => {
+        return {
+            uptime: os.uptime(), // Server uptime in seconds
+            loadAverage: os.loadavg(), // Load average over 1, 5, 15 minutes
+            freeMemory: os.freemem(), // Free memory in bytes
+            totalMemory: os.totalmem(), // Total memory in bytes
+            cpuUsage: os.cpus().map(cpu => cpu.times), // Per CPU usage
+        };
+    };
 
-    socket.on("stop-live", (data) => {
-        const { roomId } = data;
-        // Handle stopping the stream, maybe notify others
-        socket.to(roomId).emit("stop-live");
+    socket.on('server-performance', () => {
+        if (connectedRoles.has('delivery') && connectedRoles.get('delivery').has(socket.id)) {
+            io.to(socket.id).emit('server-performance', getServerStats());
+        } else {
+            console.log('Something went wrong or role is not "delivery".');
+        }
     });
-
-    socket.on("join-room", (roomId) => {
-        socket.join(roomId);
-    });
-
+    
+    
 
 };
 

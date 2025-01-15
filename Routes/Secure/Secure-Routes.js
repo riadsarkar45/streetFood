@@ -2,7 +2,6 @@ const express = require("express");
 const secure = express.Router();
 const jwt = require('jsonwebtoken');
 const { getDB } = require("../../database/config/db");
-const { ObjectId } = require("mongodb");
 
 const ACCESS_TOKEN = "2d9a2f725e4af65f1b9b6f2ffd67e11064a0cbb63daa81687c6d50f6f6f0c76b971f7285bc672791dde63aed54e5e3ec782b3006a6fca1abd6a44059b64b2315";
 

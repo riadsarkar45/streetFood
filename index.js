@@ -17,6 +17,7 @@ const userChattedHistory = require('./socket/chat/userChatHistory');
 const delivery = require('./Routes/getDeliveryMens')
 const assignedDeliveryMen = require('./Routes/assignedDelivery');
 const secure = require('./Routes/Secure/Secure-Routes');
+const calculateApiResponses = require('./utils/apiResCount');
 // Create Express App and HTTP Server
 const app = express();
 const server = http.createServer(app);
@@ -26,6 +27,26 @@ app.use(cors({
   origin: "*", // Allow all origins for development. Restrict in production!
   methods: ["GET", "POST", "PUT", "DELETE"]
 }));
+
+// Track API calls
+const apiCallCounts = {};
+
+app.use((req, res, next) => {
+  const route = req.originalUrl;
+  const method = req.method;
+
+  // Initialize the route if it doesn't exist
+  if (!apiCallCounts[route]) {
+    apiCallCounts[route] = {};
+  }
+
+  // Increment the count for the specific HTTP method
+  apiCallCounts[route][method] = (apiCallCounts[route][method] || 0) + 1;
+
+  next(); // Continue to the next middleware or route handler
+});
+
+
 app.use(compression());
 app.use(helmet());
 app.use(express.json()); // Parse JSON body
@@ -62,8 +83,10 @@ const startServer = async () => {
 
     io.on('connection', (socket) => {
       console.log(`New client connected: ${socket.id}`);
+      socket.on('apiCallCount', () => {
+        io.to(socket.id).emit('apiCallCount', apiCallCounts)
 
-      // Chat socket handler
+      })
       chatSocket(socket, io);
 
       socket.on('disconnect', () => {
