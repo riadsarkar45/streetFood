@@ -29,11 +29,11 @@ products.get('/prods/:restId', async (req, res) => {
         const restId = req.params.restId;
 
         // Query for products
-        const findProd = await getDB().collection('products').find({ storeId: restId }).toArray();
-
+        const findProd = await getDB().collection('products').find({ restId: restId }).toArray();
+        // console.log(findProd, 'line 33');
         // Query for the specific restaurant
         const restaurants1 = await getDB().collection('restaurants').findOne({ restId: restId });
-
+        // console.log(restaurants1, 'line 36');
         // Check if both exist
         if (findProd.length > 0 && restaurants1) {
             res.send({
