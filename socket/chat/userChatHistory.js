@@ -14,28 +14,36 @@ userChatHistory.get('/chatted-users/:id', async (req, res) => {
             ]
         }).sort({ createdAt: -1 }).toArray();
 
-        // Collect all results in an array
+        // Collect all results in an array, including the last message
         const results = await Promise.all(
-            chats?.map(async (user) => {
+            chats?.map(async (chat) => {
                 let userData = null;
 
                 // If the logged-in user is the sender, fetch the receiver's data
-                if (id === user.senderId) {
-                    userData = await getDB().collection('users').find({ uid: user.receiverId }).toArray();
+                if (id === chat.senderId) {
+                    userData = await getDB().collection('users').findOne({ uid: chat.receiverId });
                 }
                 // If the logged-in user is the receiver, fetch the sender's data
-                else if (id === user.receiverId) {
-                    userData = await getDB().collection('users').find({ uid: user.senderId }).toArray();
+                else if (id === chat.receiverId) {
+                    userData = await getDB().collection('users').findOne({ uid: chat.senderId });
                 }
 
-                return userData; // Return the data to collect
+                // Get the last message from the current chat
+                const lastMessage = chat.lastMessage;
+
+                // Combine user data with the last message
+                return {
+                    userData,  // The other user's data
+                    lastMessage,  // Last message in the conversation
+                    createdAt: chat.createdAt // The timestamp of the last message
+                };
             })
         );
 
-        // Filter out null or undefined results
-        const filteredResults = results.filter((result) => result !== null && result !== undefined).flat();
+        // Filter out null or undefined results and flatten the array
+        const filteredResults = results.filter((result) => result !== null && result !== undefined);
 
-        // Send the collected data in a single response
+        // Send the collected data with the last message in a single response
         res.json(filteredResults);
 
     } catch (error) {

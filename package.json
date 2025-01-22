@@ -17,9 +17,11 @@
     "jsonwebtoken": "^9.0.2",
     "localforage": "^1.10.0",
     "match-sorter": "^8.0.0",
+    "module": "^1.2.5",
     "mongodb": "^6.10.0",
     "react-router-dom": "^6.28.0",
     "redis": "^4.7.0",
+    "require": "^2.4.20",
     "socket.io": "^4.8.1",
     "sort-by": "^1.2.0",
     "ws": "^8.18.0"

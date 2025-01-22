@@ -66,10 +66,17 @@ secure.get('/users/users-role/:email', verifyToken, async (req, res) => {
 
 secure.post('/add-items', verifyToken, getUserRole, async (req, res) => { // function for verify the token
     const itemsToInsert = req.body;
+    const { productCategory, restId } = req.body;
+    console.log(productCategory, 'check category');
     try {
         if (itemsToInsert) {
             const insert = await getDB().collection('products').insertOne(itemsToInsert);
+            if (!productCategory) {
+                return res.status(404).send({ message: 'Category not found.' })
+            }
+            await getDB().collection('categories').insertOne({ productCategory, restId })
             res.send(insert)
+
         } else {
             res.send("Something went wrong. Please don't try again later.")
         }
@@ -95,5 +102,45 @@ secure.get('/delivery-mens/:adminId', verifyToken, getUserRole, async (req, res)
         res.status(500).send({ message: "Error retrieving user", error });
     }
 });
+
+secure.post('/change-cover-photo/:restId', verifyToken, getUserRole, async (req, res) => {
+    try {
+        const { img: imageToChange } = req.body;
+        const { restId: whereToChange } = req.params;
+        const findRest = await getDB().collection('restaurants').findOne({ restId: whereToChange })
+        if (findRest) {
+            console.log('got it');
+            await getDB().collection('restaurants').updateOne(
+                {
+                    restId: whereToChange,
+                },
+
+                { $set: { img: imageToChange } }
+            )
+            res.status(200).send({ message: 'Updated.' })
+        } else {
+            res.status(400).send({ message: 'Internal Server problem. Try again later.' })
+        }
+    } catch (e) {
+        console.log(e);
+    }
+})
+
+secure.get('/restaurant-detail/:restId', verifyToken, getUserRole, async (req, res) => {
+    const restId = req.params.restId;
+    try {
+        if (!restId) {
+            return res.status(502).send({ message: 'Bad get way.' })
+        }
+        const rest = await getDB().collection('restaurants').findOne({ restId: restId })
+        if (!rest) {
+            return res.status(404).send({ message: 'No data found. Or something went wrong.' })
+        }
+        res.send(rest)
+
+    } catch (e) {
+        console.log(e);
+    }
+})
 
 module.exports = secure;

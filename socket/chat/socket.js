@@ -137,6 +137,21 @@ const chatSocket = (socket, io) => {
         }
     });
 
+    socket.on('newOrder', (data) => {
+        const { senderId, receiverId, type, productTitle, productImg, cat } = data;
+        console.log(data, 'cat');
+        if (type === 'newOrder') {
+            if (isConnected.has(receiverId)) {
+                io.to(isConnected.get(receiverId)).emit('newOrder', data)
+            } else {
+                io.to(isConnected.get(senderId)).emit('confirmation', { message: 'Receiver is not connected', type: 'error' })
+            }
+        } else {
+            io.to(isConnected.get(senderId).emit('confirmation', { message: 'Something went wrong.', type: 'error' }))
+        }
+
+    })
+
     socket.on('isTyping', async (status) => {
         const { isTyping, senderId, receiverId } = status;
         console.log(receiverId);
@@ -164,8 +179,8 @@ const chatSocket = (socket, io) => {
             console.log('Something went wrong or role is not "delivery".');
         }
     });
-    
-    
+
+
 
 };
 
