@@ -88,10 +88,6 @@ const startServer = async () => {
 
       })
       chatSocket(socket, io);
-
-      socket.on('disconnect', () => {
-        console.log(`Client disconnected: ${socket.id}`);
-      });
     });
 
     // Start Server

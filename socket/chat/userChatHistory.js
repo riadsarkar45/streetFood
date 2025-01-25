@@ -30,11 +30,13 @@ userChatHistory.get('/chatted-users/:id', async (req, res) => {
 
                 // Get the last message from the current chat
                 const lastMessage = chat.lastMessage;
+                const senderId = chat.senderId;
 
                 // Combine user data with the last message
                 return {
                     userData,  // The other user's data
                     lastMessage,  // Last message in the conversation
+                    senderId,
                     createdAt: chat.createdAt // The timestamp of the last message
                 };
             })

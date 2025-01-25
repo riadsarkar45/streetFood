@@ -1,7 +1,6 @@
 const { setInterval } = require("timers/promises");
 const { getDB } = require("../../database/config/db");
 const os = require('os');
-const calculateApiResponses = require("../../utils/apiResCount");
 let isConnected = new Map();
 let connectedRoles = new Map()
 const chatSocket = (socket, io) => {
@@ -16,12 +15,14 @@ const chatSocket = (socket, io) => {
             connectedRoles.set(role, new Set());
         }
         connectedRoles.get(role).add(socket.id);
-
+        // Send the updated list of connected users to all clients
+        const connectedUsers = Array.from(isConnected.keys()); // Only send uids, not socket IDs
+        io.emit('register', { connectedUsers });
         console.log(`User registered: ${uid}, Socket ID: ${socket.id}, Role: ${role}`);
     });
 
     socket.on('chat', async (data) => {
-        const { uid: receiverId, senderId, name, msg, type } = data;
+        const { uid: receiverId, senderId, name, msg, lastMessage, type } = data;
 
         if (type === 'chat') {
             try {
@@ -30,9 +31,9 @@ const chatSocket = (socket, io) => {
                     const receiverSocket = isConnected.get(receiverId);
                     const senderSocket = isConnected.get(senderId);
 
-                    io.to(receiverSocket).emit('chat', { message: msg, senderId, receiverId, name });
+                    io.to(receiverSocket).emit('chat', { message: msg, senderId, receiverId, name, lastMessage });
                     io.to(receiverSocket).emit('confirmation', { message: 'New Message', type: 'notify', name });
-                    io.to(senderSocket).emit('chat', { message: msg, senderId, receiverId, name });
+                    io.to(senderSocket).emit('chat', { message: msg, senderId, receiverId, name, lastMessage });
                     io.to(socket.id).emit('confirmation', { message: 'Message Sent.' });
 
                     // Insert the chat message into the "chats" collection
@@ -137,12 +138,24 @@ const chatSocket = (socket, io) => {
         }
     });
 
-    socket.on('newOrder', (data) => {
-        const { senderId, receiverId, type, productTitle, productImg, cat } = data;
+    socket.on('newOrder', async (data) => {
+        const { senderId, receiverId, type, productId } = data;
         console.log(data, 'cat');
         if (type === 'newOrder') {
             if (isConnected.has(receiverId)) {
                 io.to(isConnected.get(receiverId)).emit('newOrder', data)
+                await getDB().collection('orders').insertOne(data)
+                await getDB().collection('users').updateOne(
+                    {
+                        uid: senderId
+                    },
+                    {
+                        $addToSet: {
+                            productId: productId
+                        }
+                    }
+                )
+                io.to(isConnected.get(receiverId)).emit('confirmation', { message: 'Order submission failed successfully.', type: 'success' })
             } else {
                 io.to(isConnected.get(senderId)).emit('confirmation', { message: 'Receiver is not connected', type: 'error' })
             }
@@ -179,6 +192,30 @@ const chatSocket = (socket, io) => {
             console.log('Something went wrong or role is not "delivery".');
         }
     });
+
+    socket.on('disconnect', () => {
+        // Find the user associated with the disconnected socket
+        const uid = Array.from(isConnected.keys()).find((key) => isConnected.get(key) === socket.id);
+        if (uid) {
+            // Remove the user from isConnected
+            isConnected.delete(uid);
+    
+            // Remove the socket ID from connectedRoles
+            for (const [role, sockets] of connectedRoles) {
+                sockets.delete(socket.id);
+                if (sockets.size === 0) {
+                    connectedRoles.delete(role); 
+                }
+            }
+
+            console.log(`User disconnected: ${uid}, Socket ID: ${socket.id}`);
+    
+            // Notify all other users about the updated user list
+            const connectedUsers = Array.from(isConnected.keys());
+            io.emit('register', { connectedUsers });
+        }
+    });
+    
 
 
 
